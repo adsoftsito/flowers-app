@@ -14,21 +14,13 @@ import os
 import random
 import pathlib
 
-class ExportLayer(tf.Module):
-    @tf.function(input_signature=[tf.TensorSpec([None, 64,64,3], tf.float32)])
-    def __call__(self, x):
-        return model(x)
-
-
-
 # Set the path of the input folder
 
 #dataset = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
 #directory = tf.keras.utils.get_file('flower_photos', origin=dataset, untar=True)
 #data = pathlib.Path(directory)
 
-#data = '/home/adsoft/.keras/datasets/flower_photos'
-data = '/home/codespace/.keras/datasets/flower_photos/flower_photos/'
+data = '/home/adsoft/.keras/datasets/flower_photos'
 print(data)
 folders = os.listdir(data)
 print(folders)
@@ -115,9 +107,9 @@ print(b)
 img_height = 64
 img_width = 64
 import cv2
-#image = cv2.imread('/home/codespace/.keras/datasets/flower_photos/flower_photos/roses/10090824183_d02c613f10_m.jpg')
-#image = cv2.imread('/home/codespace/.keras/datasets/flower_photos/flower_photos/tulips/100930342_92e8746431_n.jpg')
-image = cv2.imread('/home/codespace/.keras/datasets/flower_photos/flower_photos/sunflowers/1008566138_6927679c8a.jpg')
+image = cv2.imread('/home/adsoft/.keras/datasets/flower_photos/roses/10090824183_d02c613f10_m.jpg')
+#image = cv2.imread('/root/.keras/datasets/flower_photos/tulips/100930342_92e8746431_n.jpg')
+#image = cv2.imread('/home/adsoft/.keras/datasets/flower_photos/sunflowers/1008566138_6927679c8a.jpg')
 
 
 image_resized = cv2.resize(image, (img_height, img_width))
@@ -140,5 +132,3 @@ print("The predicted class is", image_output_class)
 
 export_path = 'flowers-model/1/'
 tf.saved_model.save(model, os.path.join('./',export_path))
-
-# run with:   WRAPT_DISABLE_EXTENSIONS=true python app-flowers.py
