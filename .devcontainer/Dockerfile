@@ -18,6 +18,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --upgrade pip setuptools wheel
 
 # Si usas TensorFlow o cv2, puedes fijarlas aquí
-# RUN pip install tensorflow opencv-python
+RUN pip install tensorflow opencv-python
 
 WORKDIR /workspace
