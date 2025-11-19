@@ -1,6 +1,6 @@
 {
   "name": "Python Environment",
-  "image": "mcr.microsoft.com/devcontainers/python:0-3.8.16",
+  "image": "mcr.microsoft.com/devcontainers/python:0-3.8",
   "customizations": {
     "vscode": {
       "extensions": ["ms-python.python"]
