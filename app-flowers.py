@@ -20,7 +20,8 @@ import pathlib
 #directory = tf.keras.utils.get_file('flower_photos', origin=dataset, untar=True)
 #data = pathlib.Path(directory)
 
-data = '/home/adsoft/.keras/datasets/flower_photos'
+#data = '/home/adsoft/.keras/datasets/flower_photos'
+data = 'dataset'
 print(data)
 folders = os.listdir(data)
 print(folders)
@@ -56,8 +57,8 @@ train = train.astype('float32') / 255.0
 label_dummies = pandas.get_dummies(train_labels)
 labels =  label_dummies.values.argmax(1)
 
-print(pandas.unique(train_labels))
-print(pandas.unique(labels))
+print(pandas.unique(pandas.Series(train_labels)))
+print(pandas.unique(pandas.Series(labels)))
 
 # Shuffle the labels and images randomly for better results
 
@@ -107,9 +108,10 @@ print(b)
 img_height = 64
 img_width = 64
 import cv2
-image = cv2.imread('/home/adsoft/.keras/datasets/flower_photos/roses/10090824183_d02c613f10_m.jpg')
-#image = cv2.imread('/root/.keras/datasets/flower_photos/tulips/100930342_92e8746431_n.jpg')
-#image = cv2.imread('/home/adsoft/.keras/datasets/flower_photos/sunflowers/1008566138_6927679c8a.jpg')
+
+#image = cv2.imread('dataset/roses/10090824183_d02c613f10_m.jpg')
+#image = cv2.imread('dataset/tulips/100930342_92e8746431_n.jpg')
+image = cv2.imread('dataset/sunflowers/1008566138_6927679c8a.jpg')
 
 
 image_resized = cv2.resize(image, (img_height, img_width))
@@ -121,7 +123,7 @@ image_pred = model.predict(image)
 
 print(image_pred)
 # Produce a human-readable output label\
-classes_labels = pandas.unique(train_labels)
+classes_labels = pandas.unique(pandas.Series(train_labels))
 
 
 image_output_class = classes_labels[np.argmax(image_pred)]
@@ -130,5 +132,7 @@ print(np.argmax(image_pred))
 
 print("The predicted class is", image_output_class)
 
-export_path = 'flowers-model/1/'
-tf.saved_model.save(model, os.path.join('./',export_path))
+model.save("flowers_classifier.keras")
+export_path = "./flowers-classifier/1"
+model.export(export_path)
+
