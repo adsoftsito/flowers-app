@@ -1,138 +1,113 @@
 # TensorFlow and tf.keras
+import os
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.optimizers import Adam
-
-# Helper libraries
-#import matplotlib.pyplot as plt
-import numpy as np
-from os import listdir
-from os.path import join
-import cv2
-import pandas
-import os
-import random
-import pathlib
-
-# Set the path of the input folder
-
-#dataset = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-#directory = tf.keras.utils.get_file('flower_photos', origin=dataset, untar=True)
-#data = pathlib.Path(directory)
-
-#data = '/home/adsoft/.keras/datasets/flower_photos'
-data = 'dataset'
-print(data)
-folders = os.listdir(data)
-print(folders)
-
-# Import the images and resize them to a 128*128 size
-# Also generate the corresponding labels
-
-image_names = []
-train_labels = []
-train_images = []
-
-size = 64,64
-
-for folder in folders:
-    for file in os.listdir(os.path.join(data,folder)):
-        if file.endswith("jpg"):
-            image_names.append(os.path.join(data,folder,file))
-            train_labels.append(folder)
-            img = cv2.imread(os.path.join(data,folder,file))
-            im = cv2.resize(img,size)
-            train_images.append(im)
-        else:
-            continue
-
-# Transform the image array to a numpy type
-
-train = np.array(train_images)
-print(train.shape)
-
-# Reduce the RGB values between 0 and 1
-train = train.astype('float32') / 255.0
-# Extract the labels
-label_dummies = pandas.get_dummies(train_labels)
-labels =  label_dummies.values.argmax(1)
-
-print(pandas.unique(pandas.Series(train_labels)))
-print(pandas.unique(pandas.Series(labels)))
-
-# Shuffle the labels and images randomly for better results
-
-union_list = list(zip(train, labels))
-random.shuffle(union_list)
-train,labels = zip(*union_list)
-
-# Convert the shuffled list to numpy array type
-
-train = np.array(train)
-labels = np.array(labels)
 
 
-# Develop a sequential model using tensorflow keras
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(64,64,3)),
-    keras.layers.Dense(128, activation=tf.nn.tanh),
-    keras.layers.Dense(5, activation=tf.nn.softmax)
-])
-
-print(model.summary())
-w, b = model.layers[1].get_weights()
-print(w.shape)
-print(b.shape)
-
-w, b = model.layers[2].get_weights()
-print(w.shape)
-print(b.shape)
-
-model.compile(optimizer=Adam(learning_rate=0.001),
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-
-model.fit(train,labels, epochs=400)
-w, b = model.layers[1].get_weights()
-print(w.shape)
-print(w)
-print(b.shape)
-print(b)
-
-w, b = model.layers[2].get_weights()
-print(w.shape)
-print(w)
-print(b.shape)
-print(b)
-
-img_height = 64
-img_width = 64
-import cv2
-
-image = cv2.imread('dataset/roses/10090824183_d02c613f10_m.jpg')
-#image = cv2.imread('dataset/tulips/100930342_92e8746431_n.jpg')
-#image = cv2.imread('dataset/sunflowers/1008566138_6927679c8a.jpg')
+DATA_DIR = "dataset"
+IMAGE_SIZE = (180, 180)
+BATCH_SIZE = 32
+CLASS_NAMES = ["daisy", "dandelion", "roses", "sunflowers", "tulips"]
 
 
-image_resized = cv2.resize(image, (img_height, img_width))
-image = np.expand_dims(image_resized, axis=0)
+def preprocess_image(image_path):
+    """Load and resize an image to the model's input shape."""
+    image = tf.io.read_file(str(image_path))
+    image = tf.io.decode_image(image, channels=3, expand_animations=False)
+    image = tf.cast(image, tf.float32)
+    return tf.image.resize(image, IMAGE_SIZE)
 
 
-# Make predictions
-image_pred = model.predict(image)
+def build_model(num_classes):
+    data_augmentation = keras.Sequential(
+        [
+            keras.layers.RandomFlip("horizontal"),
+            keras.layers.RandomRotation(0.1),
+            keras.layers.RandomZoom(0.1),
+        ],
+        name="data_augmentation",
+    )
 
-print(image_pred)
-# Produce a human-readable output label\
-classes_labels = pandas.unique(pandas.Series(train_labels))
+    model = keras.Sequential(
+        [
+            keras.layers.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3)),
+            data_augmentation,
+            keras.layers.Rescaling(1.0 / 255),
+            keras.layers.Conv2D(32, 3, activation="relu", padding="same"),
+            keras.layers.MaxPooling2D(),
+            keras.layers.Conv2D(64, 3, activation="relu", padding="same"),
+            keras.layers.MaxPooling2D(),
+            keras.layers.Conv2D(128, 3, activation="relu", padding="same"),
+            keras.layers.MaxPooling2D(),
+            keras.layers.GlobalAveragePooling2D(),
+            keras.layers.Dense(128, activation="relu"),
+            keras.layers.Dropout(0.3),
+            keras.layers.Dense(num_classes, activation="softmax"),
+        ]
+    )
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+    return model
 
 
-image_output_class = classes_labels[np.argmax(image_pred)]
-print(classes_labels)
-print(np.argmax(image_pred))
+def load_datasets(data_dir=DATA_DIR):
+    train_ds = keras.utils.image_dataset_from_directory(
+        data_dir,
+        validation_split=0.2,
+        subset="training",
+        seed=123,
+        image_size=IMAGE_SIZE,
+        batch_size=BATCH_SIZE,
+    )
+    val_ds = keras.utils.image_dataset_from_directory(
+        data_dir,
+        validation_split=0.2,
+        subset="validation",
+        seed=123,
+        image_size=IMAGE_SIZE,
+        batch_size=BATCH_SIZE,
+    )
+    train_ds = train_ds.cache().shuffle(1000).prefetch(tf.data.AUTOTUNE)
+    val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
+    return train_ds, val_ds
 
-print("The predicted class is", image_output_class)
 
-model.save("flowers_classifier.keras")
-export_path = "./flowers-classifier/1"
-model.export(export_path)
+def train(data_dir=DATA_DIR, epochs=30):
+    train_ds, val_ds = load_datasets(data_dir)
+    class_names = train_ds.class_names
+    model = build_model(len(class_names))
 
+    callbacks = [
+        keras.callbacks.EarlyStopping(
+            monitor="val_accuracy", patience=5, restore_best_weights=True
+        ),
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_accuracy", factor=0.5, patience=2, min_lr=1e-6
+        ),
+    ]
+    model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks)
+
+    model.save("flowers_classifier.keras")
+    export_path = "./flowers-classifier/1"
+    model.export(export_path)
+    print("Class names:", class_names)
+    return model, class_names
+
+
+def predict(model, image_path):
+    image = preprocess_image(image_path)
+    prediction = model.predict(tf.expand_dims(image, axis=0), verbose=0)
+    class_index = int(np.argmax(prediction[0]))
+    return CLASS_NAMES[class_index], float(np.max(prediction[0]))
+
+
+def main():
+    train()
+
+
+if __name__ == "__main__":
+    main()
