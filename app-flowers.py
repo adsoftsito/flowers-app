@@ -92,7 +92,7 @@ model.compile(optimizer=Adam(learning_rate=0.001),
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-model.fit(train,labels, epochs=50)
+model.fit(train,labels, epochs=400)
 w, b = model.layers[1].get_weights()
 print(w.shape)
 print(w)
@@ -109,9 +109,9 @@ img_height = 64
 img_width = 64
 import cv2
 
-#image = cv2.imread('dataset/roses/10090824183_d02c613f10_m.jpg')
+image = cv2.imread('dataset/roses/10090824183_d02c613f10_m.jpg')
 #image = cv2.imread('dataset/tulips/100930342_92e8746431_n.jpg')
-image = cv2.imread('dataset/sunflowers/1008566138_6927679c8a.jpg')
+#image = cv2.imread('dataset/sunflowers/1008566138_6927679c8a.jpg')
 
 
 image_resized = cv2.resize(image, (img_height, img_width))
