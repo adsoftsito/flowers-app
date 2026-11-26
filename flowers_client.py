@@ -20,7 +20,8 @@ def main():
 
 #  img = Image.open(image)
   #img = Image.open('dog.png')
-  img = img.resize((64, 64))
+  img = img.convert('RGB')
+  img = img.resize((180, 180))
   img_array = asarray(img)
 
   img = np.expand_dims(img_array, 0).tolist()
@@ -37,7 +38,7 @@ def main():
     prediction = response.json()['predictions']
 #    score = float(sigmoid[0](prediction[0][0]))
     print(prediction[0]) 
-    classes_labels = ['dandelion', 'sunflowers', 'daisy', 'tulips', 'roses']
+    classes_labels = ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
     print(classes_labels)
     image_output_class = classes_labels[np.argmax(prediction[0])]
     print(np.argmax(prediction[0]))
